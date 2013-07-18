@@ -77,6 +77,28 @@
   function GenerateSolution() {
     var b = document.forms[0].elements["idBord"].value;
 
+	// newline karakters toevoegen aan een (niet laatste) rij als er geen newline is ingevuld na 9 cijfers
+	var b0 = "";
+    var i0 = 0;
+    var r0 = 0;
+    while (i0 < b.length - 1) {
+        if (b[i0] == "\n") {
+            b0 += "\n";
+			r0 = 0;
+        }
+        else {
+            if (r0 == 9) {
+                b0 += "\n";
+                r0 = 0;
+            }
+            b0 += b[i0];
+            r0++;
+        }		
+        i0++;
+    }
+	b0 += b[i0];
+	b = b0;
+	
     // bord vulling controle op aantal karakters en tekens
     bb = ['', '', '', '', '', '', '', '', ''];
     bs = ['000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000'];
