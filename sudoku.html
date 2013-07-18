@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta name="keywords" content="Eelco Rem" />
+  <meta name="description" content="Eelco Rem" />
+  <link href="../style.css" rel="stylesheet" type="text/css" media="screen" />
+  <style>
+  :enabled
+  {
+    border:   2px solid #ff0000;
+    padding:  5px 5px 5px 5px;
+  }
+  :disabled
+  {
+    border:   2px solid #cccccc;
+    padding:  5px 5px 5px 5px;
+  }
+  textarea { font-size: 300%; }
+  </style>
+  <title>Home Page van Eelco Rem</title>
+  <script type="text/javascript" src="../mainmenu.js"></script>
+  <script>
+  var doorgaan = true;
+  var opl = 0;
+  var maxOpl = 1000;
+  var zet = 0;
+  var ok = false;
+  var bb = ['', '', '', '', '', '', '', '', ''];
+  var bs = ['000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000'];
+  var bs_rij = ['', '', '', '', '', '', '', '', ''];
+  var bs_kolom = ['', '', '', '', '', '', '', '', ''];
+  var bs_vierkant = ['', '', '', '', '', '', '', '', ''];
+  //var bs = ['', '', '', '', '', '', '', '', ''];
+  var bordveld = 0;
+  var i = [];
+  var oplRows = "";
+  var savInnerHTML = "";
+  var recDiepte = 0;
+  var vierkant_rij = 0;
+  var vierkant_kolom = 0;
+  var vierkant_kolom_plus_3 = 0;
+  var kolom_rij = 0;
+
+  window.onload = function () {
+      // mainmenu("Software");
+      var fb = document.getElementById("formBordContent");
+      var bt = document.getElementById("btGenereer");
+      var newitem = "Vul het bord hieronder in (9 rijen met 9 cijfers, waarbij de lege plaatsen als een 0 worden gerepresenteerd):<br /><textarea rows='9' cols='9' name='bord' id='idBord'></textarea><br /><br />";
+      var newnode = document.createElement("div");
+      newnode.innerHTML = newitem;
+      fb.insertBefore(newnode, bt);
+	  document.forms[0].elements["idBord"].value = "000000000\n000000000\n000000000\n000000000\n000000000\n000000000\n000000000\n000000000\n000000000";
+  };
+
+  String.prototype.replaceAt=function(index, char) {
+     return this.substr(0, index) + char + this.substr(index+char.length);
+  }
+
+  function controleer_gelijken(bord) {
+      var regel = 0;
+      var kolom = 0;
+      while (regel < 9) {
+          kolom = 0;
+          while (kolom < 9 - 1) {
+              if (bord[regel][kolom] != '0') {
+                  if (bord[regel].substring(kolom + 1).indexOf(bord[regel][kolom]) != -1) {
+                      return(false);
+                  }
+              }
+              kolom++;
+          }
+          regel++;
+      }
+      return(true)
+  }
+
+  function GenerateSolution() {
+    var b = document.forms[0].elements["idBord"].value;
+
+    // bord vulling controle op aantal karakters en tekens
+    bb = ['', '', '', '', '', '', '', '', ''];
+    bs = ['000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000', '000000000'];
+    bs_rij = ['', '', '', '', '', '', '', '', ''];
+    bs_kolom = ['', '', '', '', '', '', '', '', ''];
+    bs_vierkant = ['', '', '', '', '', '', '', '', ''];
+    var rij = 0;
+    var kolom = 0;
+
+    var b2 = ['', '', '', '', '', '', '', '', ''];
+    var b3 = ['', '', '', '', '', '', '', '', ''];
+    var i1 = 0;
+    var k1 = 0;
+    var r1 = 0;
+    ok = true;
+    oplRows = "";
+    while ((i1 < b.length) && (ok)) {
+        if (b[i1] != "\n") {
+            if ("01234567890".indexOf(b[i1]) == -1) {
+                ok = false;
+            }
+            else {
+                bb[r1] += b[i1];
+                k1++;
+            }
+        }
+        else {
+            if ((k1 != 0) && (k1 != 9)) ok = false;
+            if ((k1 != 0) && (r1 != 8)) r1++;
+            k1 = 0;
+        }
+        i1++;
+    }
+    var ok = ((ok) && (r1 == 8));
+
+    // logische inhoud controle
+
+    // Geen gelijke op dezelfde regel
+    if (ok) {
+        ok = controleer_gelijken(bb);
+    }
+
+    //Geen gelijke in dezelfde kolom
+    if (ok) {
+         var kr = 0;
+         var kk = 0;
+         b2 = ['', '', '', '', '', '', '', '', ''];
+         kr = 0;
+         while (kr < 9) {
+             kk = 0;
+             while (kk < 9) {
+                 b2[kr] += bb[kk][kr];
+                 kk++;
+             }
+             kr++;
+         }
+         ok = controleer_gelijken(b2);
+     }
+
+     //Geen gelijke in de 9 vierkanten
+    if (ok) {
+         var vr = 0;
+         var vk = 0;
+         var vv = 0;
+         b3 = ['', '', '', '', '', '', '', '', ''];
+         vr = 0;
+         while (vr < 3) {
+             vk = 0;
+             while (vk < 3) {
+                 vv = 0;
+                 while (vv < 9) {
+                     b3[vr*3 + vk] += bb[vr*3 + Math.floor(vv/3)][vk*3 + vv%3];
+                     vv++;
+                 }
+                 vk++;
+             }
+             vr++;
+         }
+         ok = controleer_gelijken(b3);
+    }
+
+    // Initialisatie bs_rij, bs_kolom en bs_vierkant
+    rij = 0;
+    while (rij < 9) {
+        kolom = 0;
+        while (kolom < 9) {
+            if (bb[rij][kolom] != '0') bs_rij[rij] += bb[rij][kolom];
+            if (b2[rij][kolom] != '0') bs_kolom[rij] += b2[rij][kolom];
+            if (b3[rij][kolom] != '0') bs_vierkant[rij] += b3[rij][kolom];
+            kolom++;
+        }
+        rij++;
+    }
+
+
+    if (ok) {
+        document.getElementById("idBord").disabled = true;
+        document.getElementById("btGenereer").disabled = true;
+        setTimeout("GenerateStart()", 250);
+        document.getElementById("message").innerHTML = "OK, er wordt naar oplossingen gezocht...<br/><br/>";
+    } else {
+        document.getElementById("message").innerHTML = "Ongeldig bord, geef aub opnieuw in! Gebruik 0 voor de lege plekken.";
+    }
+  }
+
+  function GenerateStart() {
+    doorgaan = true;
+    opl = 0;
+    zet = 0;
+    bordveld = 0;
+    savInnerHTML = document.getElementById("message").innerHTML;
+
+    var currDate = new Date();
+    var msStart = currDate.getTime();
+    var msEnd = currDate.getTime();
+
+    Generate();
+    if (oplRows.length > 0) {
+        savInnerHTML = oplRows;
+    }
+    currDate = new Date();
+    msEnd = currDate.getTime();
+    savInnerHTML = "Oplostijd: " + (msEnd - msStart) + " milliseconden.<br/>"  
+      
+    if (opl == 0) {
+      savInnerHTML += "Er zijn geen oplossingen mogelijk.";
+    } else {
+        if (opl == 1) {
+            savInnerHTML += "Unieke oplossing, ";
+        } else {
+            if (opl > maxOpl) {
+                savInnerHTML += "Er zijn meer dan " + maxOpl + " oplossingen mogelijk. De eerste oplossing is ";
+            } else {
+                savInnerHTML += "Er zijn " + opl + " oplossingen mogelijk. De eerste oplossing is ";
+            }
+        }
+        savInnerHTML += oplRows;
+    }
+    document.getElementById("message").innerHTML = savInnerHTML;
+    document.getElementById("idBord").disabled = false;
+    document.getElementById("btGenereer").disabled = false;
+  }
+
+  function Generate() {
+    var zet_gedaan = false;
+    var rij = 0;
+    var kolom = 0;
+    var vierkant = 0;
+
+    if (bordveld == 81) {
+      opl++;
+      if (opl == 1) {
+          oplRows += "gevonden in " + zet + " zetten:";
+          oplRows += "<br/><br/><font size='200%'>";
+          rij = 0;
+          while (rij < 9) {
+              kolom = 0;
+              while (kolom < 9) {
+                  if (bb[rij][kolom] == bs[rij][kolom]) oplRows += "<b>";
+                  oplRows += bs[rij][kolom];
+                  if (bb[rij][kolom] == bs[rij][kolom]) oplRows += "</b>";
+                  kolom++;
+              }
+              oplRows += "<br/>\n";
+              rij++;
+          }
+          oplRows += "</font><br/>\n";
+      }
+      if (opl > maxOpl) {
+          doorgaan = false;
+      }
+    } else {
+      rij = Math.floor(bordveld / 9);
+      kolom = bordveld%9;
+      vierkant = (Math.floor(rij/3) * 3) + Math.floor(kolom/3);
+      while (doorgaan) {
+        zet_gedaan = false;
+        // Bepaal rij, kolom en vierkant
+        // Alles al geprobeerd?
+        if (bs[rij][kolom] == "9") {
+            break;
+        }
+        // Kijk of bordveld vooringevuld is
+        if (bb[rij][kolom] != '0') {
+            // Al geprobeerd?
+            if (bs[rij][kolom] == bb[rij][kolom]) {
+                break;
+            }
+            // Vooringevulde waarde nemen
+            bs[rij] = bs[rij].replaceAt(kolom, bb[rij][kolom]);
+        }
+        else {
+            // Nieuwe zet?
+            bs[rij] = bs[rij].replaceAt(kolom, "" + (1 + parseInt(bs[rij][kolom])));
+            // Niet ok in rij?
+            if (bs_rij[rij].indexOf(bs[rij][kolom]) != -1) continue;
+            // Niet ok in kolom?
+            if (bs_kolom[kolom].indexOf(bs[rij][kolom]) != -1) continue;
+            // Niet ok in vierkant?
+            if (bs_vierkant[vierkant].indexOf(bs[rij][kolom]) != -1) continue;
+            // OK
+            zet++;
+            zet_gedaan = true;
+            bs_rij[rij] += bs[rij][kolom];
+            bs_kolom[kolom] += bs[rij][kolom];
+            bs_vierkant[vierkant] += bs[rij][kolom];
+        }
+        bordveld++;
+        Generate();
+        if (zet_gedaan) {
+            bs_rij[rij] = bs_rij[rij].substring(0, bs_rij[rij].length - 1);
+            bs_kolom[kolom] = bs_kolom[kolom].substring(0, bs_kolom[kolom].length - 1);
+            bs_vierkant[vierkant] = bs_vierkant[vierkant].substring(0, bs_vierkant[vierkant].length - 1);
+        }
+      }
+      bs[rij] = bs[rij].replaceAt(kolom, "0");
+    }
+    bordveld--;
+  }
+</script>
+</head>
+
+<body>
+  <table class="maintable" align="center" cellpadding="0" cellspacing="0">
+  <tr>
+    <td class="header" colspan="3" align="left" valign="top">
+      <div id="header">
+        <h1>Sudoku Oplossing Generator</h1>
+        <IMG SRC="javascript_logo.gif" class="image" />
+   	  </div>
+    </td>
+  </tr>
+  <tr>
+    <td class="menu" align="left" valign="top">
+      <div id="mainmenu"></div>
+    </td>
+    <td class="tekst">
+      Lost alle sudoku's op, veelal in minder dan een seconde (afhankelijk van computer/browser)<br/><br/>
+      <form id="formBord">
+        <div id="formBordContent">
+          <input type="button" id="btGenereer" value="Genereer" onclick="GenerateSolution()"/>
+        </div>
+      </form>
+      <br />
+      <div id="message"></div>
+    </td>
+  </tr>
+  </table>
+  <div id="footer">
+	  <p class="footer">Eelco Rem, Hof van Twente, <a href="mailto:eelco@rem.name">eelco@rem.name</a>, 06-52611454</p>
+  </div>
+</body>
+</html>
