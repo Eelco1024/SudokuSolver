@@ -127,12 +127,12 @@
         }
         else {
             if ((k1 != 0) && (k1 != 9)) ok = false;
-            if ((k1 != 0) && (r1 != 8)) r1++;
+            r1++;
             k1 = 0;
         }
         i1++;
     }
-    var ok = ((ok) && (r1 == 8));
+    var ok = ((ok) && (r1 == 8) && (k1 == 9));
 
     // logische inhoud controle
 
